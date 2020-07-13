@@ -1,0 +1,6 @@
+###EschatologicalUnit.ChestReset配置文件###
+#该插件为OurWorld服务器EschatologicalUnit小游戏项目的一个原创插件
+#箱子刷新指令
+
+config:
+  prefix: "[EschatologicalUnit]"
