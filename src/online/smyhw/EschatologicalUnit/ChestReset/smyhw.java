@@ -1,5 +1,6 @@
 package online.smyhw.EschatologicalUnit.ChestReset;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -118,11 +120,12 @@ public class smyhw extends JavaPlugin implements Listener
                             		sender.sendMessage(prefix+"<-f>删除原配置<"+temp2+">");	
                             	}
                         	}
+                        	continue;
                 		}
                 		default:
                 		{
-                			sender.sendMessage(prefix+"未知的选项<"+args[i]+">,不会做任何操作");
-                			return true;
+                			sender.sendMessage(prefix+"未知的选项<"+args[i]+">");
+                			continue;
                 		}
                 		}
                 	}
@@ -146,26 +149,125 @@ public class smyhw extends JavaPlugin implements Listener
                 	configer.set("data."+dataID+".y",block.getY());
                 	configer.set("data."+dataID+".z",block.getZ());
                 	configer.set("data."+dataID+".world",block.getWorld().getName());
-                	try
-                	{//reload NMSL
-						configer.save("./plugins/EschatologicalUnit.ChestReset/config.yml");
-						configer.load("./plugins/EschatologicalUnit.ChestReset/config.yml");
-					} 
-                	catch (Exception e) 
-                	{
-						e.printStackTrace();
-					}
+                	SreloadConfig();
                 	sender.sendMessage(prefix+"已成功尝试保存方块<"+dataID+">");
                 	return true;
                 	
                 }
                 case "check":
                 {
-                	for(int i=1;i<args.length;i++)
+                	sender.sendMessage(prefix+" ======ChestRestCheck======");
+                	sender.sendMessage(prefix+"---------有效性检查---------");
                 	{
-                		
-                		
+	                	Set<String> temp1 = configer.getConfigurationSection("data").getKeys(false);
+	                	for(String temp2:temp1)
+	                	{
+	                    	int cx = configer.getInt("data."+temp2+".x");
+	                    	int cy = configer.getInt("data."+temp2+".y");
+	                    	int cz = configer.getInt("data."+temp2+".z");
+	                    	World world = Bukkit.getWorld(configer.getString("data."+temp2+".world"));
+	                		if(world.getBlockAt(cx, cy, cz).getType()!=Material.CHEST)
+	                    	{
+	                    		sender.sendMessage(prefix+"[+]坐标方块不是箱子{ID=<"+temp2+">;World=<"+world.getName()+">;X=<"+cx+">;Y=<"+cy+">;Z=<"+cz+">}");	
+	                    	}
+	                	}
                 	}
+                	sender.sendMessage(prefix+"---------重复性检查---------");
+                	{
+	                	//已经被判定为重复的Set
+	                	Set<String> haveRe = new HashSet<String>();
+	                	Set<String> temp1 = configer.getConfigurationSection("data").getKeys(false);
+	                	for(String temp2:temp1)
+	                	{
+	                		if(haveRe.contains(temp2)) {continue;}
+	                    	int cx = configer.getInt("data."+temp2+".x");
+	                    	int cy = configer.getInt("data."+temp2+".y");
+	                    	int cz = configer.getInt("data."+temp2+".z");
+	                    	String world = configer.getString("data."+temp2+".world");
+	                    	Set<String> temp3 = configer.getConfigurationSection("data").getKeys(false);
+	                    	boolean title = false;
+	                    	for(String temp4:temp3)
+	                    	{
+	                        	int ccx = configer.getInt("data."+temp4+".x");
+	                        	int ccy = configer.getInt("data."+temp4+".y");
+	                        	int ccz = configer.getInt("data."+temp4+".z");
+	                        	String cworld = configer.getString("data."+temp4+".world");
+	                        	if(cworld.equals(world) && ccx==cx && ccy==cy && ccz==cz && !(temp4.equals(temp2)))
+	                        	{
+	                        		if(!title) 
+	                        		{
+	                        			sender.sendMessage("重复组{World=<"+world+">;X=<"+cx+">;Y=<"+cy+">;Z=<"+cz+">}");
+	                        			title = true;
+	                        		}
+	                        		sender.sendMessage(prefix+"[+]重复{ID=<"+temp2+">;World=<"+world+">;X=<"+cx+">;Y=<"+cy+">;Z=<"+cz+">}");	
+	                        		haveRe.add(temp4);
+	                        	}
+	                    	}
+	                	}
+                	}
+                	//处理参数
+                	if(args.length>1)
+                	{
+                		for(int i=1;i<args.length;i++)
+                		{
+                			switch(args[i])
+                			{
+                			case "sid":
+                			{//理顺ID
+                				sender.sendMessage(prefix+"=========附加任务:理顺ID=========");
+                				Set<String> temp1 = configer.getConfigurationSection("data").getKeys(false);
+                				//临时箱子Set，所有箱子配置的副本
+            					Set<ConfigurationSection> tempConfigS = new HashSet<ConfigurationSection>();
+                				for(String temp2:temp1)
+                				{
+                					ConfigurationSection tempConfig = configer.getConfigurationSection("data."+temp2);
+                					sender.sendMessage(prefix+"[+]提取ID=<"+temp2+">");
+                					tempConfigS.add(tempConfig);
+                				}
+                				//清空配置文件
+                				configer.set("data", null);
+                				//遍历提取出来的副本，一个个放回配置文件
+                				int num = 0;
+                				for(ConfigurationSection temp2:tempConfigS)
+                				{
+                					configer.set("data."+num, temp2);
+                					sender.sendMessage(prefix+"[+]回置ID=<"+num+">");
+                					num++;
+                				}
+                				SreloadConfig();
+                				sender.sendMessage(prefix+"=========附加任务:理顺ID:完成=========");
+                				continue;
+                			}
+                			default:
+                			{
+                				sender.sendMessage(prefix+"未知的参数<"+args[i]+">");
+                				continue;
+                			}
+                			}
+                		}
+                	}
+                	return true;
+                }
+                case "find":
+                {//寻找指定范围内的箱子
+                	if(args.length<2) {CSBZ(sender);}
+                	int r = Integer.parseInt(args[1]);
+                	int x = ((Player) sender).getLocation().getBlockX();
+                	int y = ((Player) sender).getLocation().getBlockY();
+                	int z = ((Player) sender).getLocation().getBlockZ();
+                	Set<String> temp1 = configer.getConfigurationSection("data").getKeys(false);
+                	for(String temp2:temp1)
+                	{
+                    	int cx = configer.getInt("data."+temp2+".x");
+                    	int cy = configer.getInt("data."+temp2+".y");
+                    	int cz = configer.getInt("data."+temp2+".z");
+                    	if( ( ( (x+r) > cx) && (cx > (x-r) ) ) && ( ( (y+r) > cy) && (cy > (y-r) ) ) && ( ( (z+r) > cz) && (cz > (z-r) ) ) )
+                    	{
+                    		sender.sendMessage(prefix+"附近的箱子{ID=<"+temp2+">}");
+                    	}
+                    	
+                	}
+                	return true;
                 }
                 default:
                 	CSBZ(sender);
@@ -173,6 +275,19 @@ public class smyhw extends JavaPlugin implements Listener
                 return true;                                                       
         }
        return false;
+	}
+	
+	static synchronized void SreloadConfig()
+	{
+    	try
+    	{//reload NMSL
+			configer.save("./plugins/EschatologicalUnit.ChestReset/config.yml");
+			configer.load("./plugins/EschatologicalUnit.ChestReset/config.yml");
+		} 
+    	catch (Exception e) 
+    	{
+			e.printStackTrace();
+		}
 	}
 	
 	static void reset(String ID)
