@@ -95,7 +95,37 @@ public class smyhw extends JavaPlugin implements Listener
                 }
                 case "set":
                 {
-                	if(args.length<3) {CSBZ(sender);return true;}
+                	if(args.length<4) {CSBZ(sender);return true;}
+                	if(args.length>4)
+                	for(int i=4;i<args.length;i++)
+                	{
+                		switch(args[i])
+                		{
+                		case "-f":
+                		{//覆盖之前的相同坐标箱子
+                        	int x = Integer.parseInt(args[1]);
+                        	int y = Integer.parseInt(args[2]);
+                        	int z = Integer.parseInt(args[3]);
+                        	Set<String> temp1 = configer.getConfigurationSection("data").getKeys(false);
+                        	for(String temp2:temp1)
+                        	{
+                            	int cx = configer.getInt("data."+temp2+".x");
+                            	int cy = configer.getInt("data."+temp2+".y");
+                            	int cz = configer.getInt("data."+temp2+".z");
+                            	if(cx==x && cy==y && cz==z)
+                            	{
+                            		configer.set("data."+temp2, null);
+                            		sender.sendMessage(prefix+"<-f>删除原配置<"+temp2+">");	
+                            	}
+                        	}
+                		}
+                		default:
+                		{
+                			sender.sendMessage(prefix+"未知的选项<"+args[i]+">,不会做任何操作");
+                			return true;
+                		}
+                		}
+                	}
                 	int x = Integer.parseInt(args[1]);
                 	int y = Integer.parseInt(args[2]);
                 	int z = Integer.parseInt(args[3]);
@@ -128,6 +158,14 @@ public class smyhw extends JavaPlugin implements Listener
                 	sender.sendMessage(prefix+"已成功尝试保存方块<"+dataID+">");
                 	return true;
                 	
+                }
+                case "check":
+                {
+                	for(int i=1;i<args.length;i++)
+                	{
+                		
+                		
+                	}
                 }
                 default:
                 	CSBZ(sender);
