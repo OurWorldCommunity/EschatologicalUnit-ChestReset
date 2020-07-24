@@ -97,17 +97,32 @@ public class smyhw extends JavaPlugin implements Listener
                 }
                 case "set":
                 {
-                	if(args.length<4) {CSBZ(sender);return true;}
-                	if(args.length>4)
-                	for(int i=4;i<args.length;i++)
+                	if(args.length<2) {CSBZ(sender);return true;}
+                	int x=0;
+                	int y=0;
+                	int z=0;
+                	//首先确定需要操作的方块坐标
+                	if(args[1].equals("tar"))
+                	{//指针指向的方块
+                		Block b = ((Player) sender).getTargetBlock((Set<Material>) null, 100);
+                		x = b.getX();
+                		y = b.getY();
+                		z = b.getZ();
+                	}
+                	else
+                	{//坐标
+                		if(args.length<4) {CSBZ(sender);return true;}
+                    	x = Integer.parseInt(args[1]);
+                    	y = Integer.parseInt(args[2]);
+                    	z = Integer.parseInt(args[3]);
+                	}
+                	for(int i=0;i<args.length;i++)
                 	{
+                		if(args[i].startsWith("-"))
                 		switch(args[i])
                 		{
                 		case "-f":
                 		{//覆盖之前的相同坐标箱子
-                        	int x = Integer.parseInt(args[1]);
-                        	int y = Integer.parseInt(args[2]);
-                        	int z = Integer.parseInt(args[3]);
                         	Set<String> temp1 = configer.getConfigurationSection("data").getKeys(false);
                         	for(String temp2:temp1)
                         	{
@@ -129,9 +144,7 @@ public class smyhw extends JavaPlugin implements Listener
                 		}
                 		}
                 	}
-                	int x = Integer.parseInt(args[1]);
-                	int y = Integer.parseInt(args[2]);
-                	int z = Integer.parseInt(args[3]);
+
                 	Block block = ((Player) sender).getWorld().getBlockAt(x, y, z);
                 	if(block.getType()!=org.bukkit.Material.CHEST)
                 	{//检查方块类型
